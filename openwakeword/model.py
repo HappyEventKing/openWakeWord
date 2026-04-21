@@ -113,7 +113,9 @@ class Model():
             try:
                 import ai_edge_litert.interpreter as tflite
 
-                def tflite_predict(tflite_interpreter, input_index, output_index, x):
+                def tflite_predict(tflite_interpreter, input_index, output_index, transpose, x):
+                    if transpose:
+                        x = np.transpose(x, (0, 2, 1))
                     tflite_interpreter.set_tensor(input_index, x)
                     tflite_interpreter.invoke()
                     return tflite_interpreter.get_tensor(output_index)[None, ]
@@ -165,13 +167,35 @@ class Model():
                 self.models[mdl_name] = tflite.Interpreter(model_path=mdl_path, num_threads=1)
                 self.models[mdl_name].allocate_tensors()
 
-                self.model_inputs[mdl_name] = self.models[mdl_name].get_input_details()[0]['shape'][1]
+                tflite_input_shape = self.models[mdl_name].get_input_details()[0]['shape']
                 self.model_outputs[mdl_name] = self.models[mdl_name].get_output_details()[0]['shape'][1]
+
+                # Detect onnx2tf transpose issue: some conversions swap the time and feature dims.
+                # We compare with the ONNX model (if present) to determine the correct input shape.
+                needs_transpose = False
+                onnx_path = mdl_path.replace('.tflite', '.onnx')
+                if os.path.exists(onnx_path) and len(tflite_input_shape) == 3:
+                    try:
+                        import onnxruntime as ort
+                        sess_opts = ort.SessionOptions()
+                        sess_opts.inter_op_num_threads = 1
+                        sess_opts.intra_op_num_threads = 1
+                        onnx_shape = ort.InferenceSession(onnx_path, sess_options=sess_opts,
+                                                           providers=["CPUExecutionProvider"]).get_inputs()[0].shape
+                        if len(onnx_shape) == 3 and (tflite_input_shape[1], tflite_input_shape[2]) == (onnx_shape[2], onnx_shape[1]):
+                            needs_transpose = True
+                    except Exception:
+                        pass
+
+                if needs_transpose:
+                    self.model_inputs[mdl_name] = tflite_input_shape[2]
+                else:
+                    self.model_inputs[mdl_name] = tflite_input_shape[1]
 
                 tflite_input_index = self.models[mdl_name].get_input_details()[0]['index']
                 tflite_output_index = self.models[mdl_name].get_output_details()[0]['index']
 
-                pred_function = functools.partial(tflite_predict, self.models[mdl_name], tflite_input_index, tflite_output_index)
+                pred_function = functools.partial(tflite_predict, self.models[mdl_name], tflite_input_index, tflite_output_index, needs_transpose)
                 self.model_prediction_function[mdl_name] = pred_function
 
             if class_mapping_dicts and class_mapping_dicts[wakeword_models.index(mdl_path)].get(mdl_name, None):

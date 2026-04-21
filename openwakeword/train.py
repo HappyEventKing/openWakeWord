@@ -1,3 +1,16 @@
+import os
+import sys
+
+# Patch torchaudio.info for compatibility with torchaudio 2.11+ and torch-audiomentations
+try:
+    import importlib.util
+    patch_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "torchaudio_info_patch.py")
+    spec = importlib.util.spec_from_file_location("torchaudio_info_patch", patch_path)
+    patch_mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(patch_mod)
+except Exception as e:
+    print(f"[torchaudio patch] skipped: {e}")
+
 import torch
 from torch import optim, nn
 import torchinfo
@@ -572,23 +585,61 @@ class Model(nn.Module):
 
 # Separate function to convert onnx models to tflite format
 def convert_onnx_to_tflite(onnx_model_path, output_path):
-    """Converts an ONNX version of an openwakeword model to the Tensorflow tflite format."""
-    # imports
+    """Converts an ONNX version of an openwakeword model to the Tensorflow tflite format.
+
+    Workaround for onnx2tf dimension-swap bug: some versions of onnx2tf transpose
+    the two trailing dims of the input (e.g. [1,16,96] -> [1,96,16]).
+    We prepend a Transpose node to the ONNX graph so that after onnx2tf swaps
+    the dims the resulting TFLite model expects the original [1,16,96] shape.
+    """
+    from onnx2tf import convert
+    import shutil
     import onnx
-    from onnx_tf.backend import prepare
-    import tensorflow as tf
+    from onnx import helper, TensorProto
 
-    # Convert to tflite from onnx model
-    onnx_model = onnx.load(onnx_model_path)
-    tf_rep = prepare(onnx_model, device="CPU")
+    # Load original ONNX and create a pre-transposed variant for TFLite conversion
+    model = onnx.load(onnx_model_path)
+    graph = model.graph
+    original_input = graph.input[0]
+    orig_shape = [d.dim_value for d in original_input.type.tensor_type.shape.dim]
+
+    # Only apply workaround for 3-D inputs where onnx2tf is known to swap dims
+    if len(orig_shape) == 3:
+        # Swap the last two dims in the ONNX input shape (e.g. [1,16,96] -> [1,96,16])
+        original_input.type.tensor_type.shape.dim[1].dim_value = orig_shape[2]
+        original_input.type.tensor_type.shape.dim[2].dim_value = orig_shape[1]
+
+        # Insert Transpose(perm=[0,2,1]) right after the input to recover [1,16,96]
+        transpose_node = helper.make_node(
+            "Transpose",
+            inputs=[original_input.name],
+            outputs=["_oww_pre_transpose"],
+            name="_oww_pre_transpose",
+            perm=[0, 2, 1]
+        )
+        for node in graph.node:
+            for i, inp in enumerate(node.input):
+                if inp == original_input.name:
+                    node.input[i] = "_oww_pre_transpose"
+        graph.node.insert(0, transpose_node)
+        onnx.checker.check_model(model)
+
     with tempfile.TemporaryDirectory() as tmp_dir:
-        tf_rep.export_graph(os.path.join(tmp_dir, "tf_model"))
-        converter = tf.lite.TFLiteConverter.from_saved_model(os.path.join(tmp_dir, "tf_model"))
-        tflite_model = converter.convert()
+        modified_onnx_path = os.path.join(tmp_dir, "modified.onnx")
+        onnx.save(model, modified_onnx_path)
+        convert(modified_onnx_path, output_folder_path=tmp_dir)
 
-        logging.info(f"####\nSaving tflite mode to '{output_path}'")
-        with open(output_path, 'wb') as f:
-            f.write(tflite_model)
+        model_name = os.path.splitext(os.path.basename(modified_onnx_path))[0]
+        tflite_file = os.path.join(tmp_dir, model_name + "_float32.tflite")
+        if not os.path.exists(tflite_file):
+            tflite_files = [f for f in os.listdir(tmp_dir) if f.endswith(".tflite")]
+            if tflite_files:
+                tflite_file = os.path.join(tmp_dir, tflite_files[0])
+        if os.path.exists(tflite_file):
+            shutil.copy(tflite_file, output_path)
+            logging.info(f"####\nSaving tflite model to '{output_path}'")
+        else:
+            logging.warning("TFLite conversion completed but no .tflite file was found")
 
     return None
 
