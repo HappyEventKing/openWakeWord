@@ -156,7 +156,17 @@ venv_2/
 
 # User-specific training configs (copy from config.template.yml)
 hey_eventi.yml
+test_*.yml
+*_config.yml
+
+# Test / temporary outputs
+test_output/
+test_voice_samples/
 
 # Model binaries (auto-downloaded)
 openwakeword/resources/models/*.onnx
 openwakeword/resources/models/*.tflite
+
+# Prevent accidental archive commits in root
+/musan.tar.gz
+/mit_rir.zip

@@ -170,17 +170,30 @@ def build_tasks(text, providers, voices_cfg, params_cfg, repeats=5, train_ratio=
     return tasks
 
 
+def _is_explicit_split_dir(path):
+    """判断路径是否已经是明确的 train/test 目录（兼容 train.py 调用方式）。"""
+    p = path.lower().replace("\\", "/")
+    return any(p.endswith(s) for s in ["/positive_train", "/positive_test",
+                                       "/negative_train", "/negative_test"])
+
+
 def get_output_path(task, base_dir):
-    """根据任务类型和 split 决定输出路径。"""
+    """根据任务类型和 split 决定输出路径。
+    当 base_dir 已经是明确的 split 目录时，直接输出到该目录（兼容 train.py）。
+    """
     kind = task["kind"]
     split = task["split"]
     source = task["source"]
     idx = task["idx"]
 
-    if kind == "positive":
-        sub = os.path.join(base_dir, "positive_train" if split == "train" else "positive_test")
+    if _is_explicit_split_dir(base_dir):
+        # train.py 调用方式：output_dir 已经是目标目录
+        sub = base_dir
     else:
-        sub = os.path.join(base_dir, "negative_train" if split == "train" else "negative_test")
+        if kind == "positive":
+            sub = os.path.join(base_dir, "positive_train" if split == "train" else "positive_test")
+        else:
+            sub = os.path.join(base_dir, "negative_train" if split == "train" else "negative_test")
 
     os.makedirs(sub, exist_ok=True)
 
@@ -351,11 +364,14 @@ def generate_samples(text, max_samples, batch_size, noise_scales, noise_scale_ws
     stats = {"success": 0, "fail": 0, "skip": 0}
     pbar = tqdm(total=len(all_tasks), desc=f"生成 {'负' if is_negative else '正'}样本")
 
+    # 兼容 train.py：如果 output_dir 已经是明确的 split 目录，直接用它作为 base_dir
+    base_dir = output_dir if _is_explicit_split_dir(output_dir) else os.path.dirname(output_dir)
+
     async def run_all():
         await asyncio.gather(
-            *[gen_aliyun(t, aliyun_sem, stats, os.path.dirname(output_dir)) for t in all_tasks if t["source"] == "aliyun"],
-            *[gen_kokoro(t, kokoro_sem, stats, os.path.dirname(output_dir)) for t in all_tasks if t["source"] == "kokoro"],
-            *[gen_edge(t, edge_sem, stats, os.path.dirname(output_dir)) for t in all_tasks if t["source"] == "edge"],
+            *[gen_aliyun(t, aliyun_sem, stats, base_dir) for t in all_tasks if t["source"] == "aliyun"],
+            *[gen_kokoro(t, kokoro_sem, stats, base_dir) for t in all_tasks if t["source"] == "kokoro"],
+            *[gen_edge(t, edge_sem, stats, base_dir) for t in all_tasks if t["source"] == "edge"],
         )
 
     asyncio.run(run_all())

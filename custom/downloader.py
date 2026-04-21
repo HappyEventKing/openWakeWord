@@ -44,7 +44,7 @@ def download_file(url, filename, desc="下载中"):
 def download_rir(output_dir="./downloads/mit_rirs"):
     """下载 MIT Room Impulse Response 数据集。"""
     os.makedirs(output_dir, exist_ok=True)
-    zip_path = "mit_rir.zip"
+    zip_path = os.path.join(output_dir, "mit_rir.zip")
     url = "https://mcdermottlab.mit.edu/Reverb/IRMAudio/Audio.zip"
 
     if os.path.exists(os.path.join(output_dir, "Audio")):
@@ -63,10 +63,11 @@ def download_rir(output_dir="./downloads/mit_rirs"):
 
 def download_background(output_dir="./downloads"):
     """下载 MUSAN 背景音数据集。"""
-    tar_path = "musan.tar.gz"
+    os.makedirs(output_dir, exist_ok=True)
+    tar_path = os.path.join(output_dir, "musan.tar.gz")
     url = "https://www.openslr.org/resources/17/musan.tar.gz"
 
-    if os.path.exists("./musan"):
+    if os.path.exists(os.path.join(output_dir, "musan")):
         print("  ✅ MUSAN 已存在，跳过")
         return True
 

@@ -9,6 +9,75 @@ openWakeWord is an open-source wakeword library that can be used to create voice
 - [Training New Models](#training-new-models)
 - [FAQ](#faq)
 
+# Custom Training Guide (配置驱动多平台 TTS)
+
+This fork adds a config-driven training pipeline with multi-platform TTS support (Aliyun, Kokoro, Edge). Keep the original repo structure and add your tools under `custom/`.
+
+## Quick Start
+
+```bash
+# 1. Install dependencies
+pip install -r requirements.txt
+
+# 2. Prepare environment variables
+cp .env.example .env
+# Edit .env: fill in ALIYUN_API_KEY and KOKORO_URL
+
+# 3. Create your training config from template
+cp config.template.yml my_wakeword.yml
+# Edit my_wakeword.yml: model_name, target_phrase, tts_providers, voices
+
+# 4. (Optional) List available voices
+python list_voices.py --provider edge
+python list_voices.py --provider kokoro
+python list_voices.py --provider aliyun
+
+# 5. (Optional) Test voices before training
+python test_voices.py --config my_wakeword.yml --provider edge
+
+# 6. One-command training (auto-downloads data, generates clips, augments, trains, converts)
+python -m openwakeword.train \
+  --training_config my_wakeword.yml \
+  --generate_clips \
+  --augment_clips \
+  --train_model \
+  --convert_to_tflite
+
+# 7. Test the trained model
+python test_wakeup.py \
+  --model ./output/my_wakeword/my_wakeword.tflite \
+  --audio ./output/my_wakeword/positive_test/
+```
+
+## Directory Layout
+
+```
+openWakeWord/
+├── openwakeword/              # Original core library (unchanged)
+├── custom/                    # User custom modules
+│   ├── cli/                   # CLI tools (list_voices, test_voices, test_wakeup)
+│   ├── tts/                   # TTS generation core
+│   └── downloader.py          # Auto-download training data
+├── downloads/                 # Training data (RIR, MUSAN, features)
+├── config.template.yml        # Training config template
+├── generate_samples.py        # Wrapper compatible with train.py
+├── list_voices.py             # List available TTS voices
+├── test_voices.py             # Test TTS voices
+├── test_wakeup.py             # Test trained model
+├── .env.example               # Environment variable template
+└── requirements.txt           # Full dependencies
+```
+
+## Key Features
+
+- **Multi-platform TTS**: Aliyun DashScope, Kokoro (local HTTP), Edge TTS
+- **Config-driven**: All settings in one YAML file
+- **Secure**: API keys in `.env` (gitignored)
+- **Auto-download**: Training data downloaded automatically on first run
+- **Compatible**: `generate_samples.py` remains compatible with upstream `train.py`
+
+---
+
 # Updates
 
 **2024/02/11**
