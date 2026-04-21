@@ -41,7 +41,7 @@ def download_file(url, filename, desc="下载中"):
         return False
 
 
-def download_rir(output_dir="./mit_rirs"):
+def download_rir(output_dir="./downloads/mit_rirs"):
     """下载 MIT Room Impulse Response 数据集。"""
     os.makedirs(output_dir, exist_ok=True)
     zip_path = "mit_rir.zip"
@@ -61,7 +61,7 @@ def download_rir(output_dir="./mit_rirs"):
     return False
 
 
-def download_background(output_dir="."):
+def download_background(output_dir="./downloads"):
     """下载 MUSAN 背景音数据集。"""
     tar_path = "musan.tar.gz"
     url = "https://www.openslr.org/resources/17/musan.tar.gz"
@@ -80,7 +80,7 @@ def download_background(output_dir="."):
     return False
 
 
-def download_validation(output_path="./validation_set_features.npy"):
+def download_validation(output_path="./downloads/validation_set_features.npy"):
     """下载验证集特征文件。"""
     if os.path.exists(output_path):
         print(f"  ✅ {output_path} 已存在，跳过")
@@ -90,7 +90,7 @@ def download_validation(output_path="./validation_set_features.npy"):
     return download_file(url, output_path, "下载验证集特征")
 
 
-def download_negative_features(output_path="./openwakeword_features_ACAV100M_2000_hrs_16bit.npy"):
+def download_negative_features(output_path="./downloads/openwakeword_features_ACAV100M_2000_hrs_16bit.npy"):
     """下载预计算负样本特征（约 8GB）。"""
     if os.path.exists(output_path):
         print(f"  ✅ {output_path} 已存在，跳过")
@@ -113,17 +113,17 @@ def ensure_training_data(config=None):
     print("=" * 50)
 
     # RIR
-    rir_paths = config.get("rir_paths", ["./mit_rirs"])
+    rir_paths = config.get("rir_paths", ["./downloads/mit_rirs"])
     for p in rir_paths:
         download_rir(os.path.dirname(p) if "/" in p else p)
 
     # Background
-    bg_paths = config.get("background_paths", ["./musan/music", "./musan/noise", "./musan/speech"])
+    bg_paths = config.get("background_paths", ["./downloads/musan/music", "./downloads/musan/noise", "./downloads/musan/speech"])
     if bg_paths and any("musan" in p for p in bg_paths):
         download_background()
 
     # Validation features
-    val_path = config.get("false_positive_validation_data_path", "./validation_set_features.npy")
+    val_path = config.get("false_positive_validation_data_path", "./downloads/validation_set_features.npy")
     download_validation(val_path)
 
     # Negative features (optional but recommended)

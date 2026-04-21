@@ -4,7 +4,7 @@ import sys
 # Patch torchaudio.info for compatibility with torchaudio 2.11+ and torch-audiomentations
 try:
     import importlib.util
-    patch_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "torchaudio_info_patch.py")
+    patch_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "custom", "torchaudio_info_patch.py")
     spec = importlib.util.spec_from_file_location("torchaudio_info_patch", patch_path)
     patch_mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(patch_mod)
