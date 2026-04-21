@@ -11,15 +11,14 @@ n_samples_val: 3370
 tts_batch_size: 50
 augmentation_batch_size: 16
 
-# Point to project root where generate_samples.py stub is located
-piper_sample_generator_path: "./piper_stub"
+# 兼容 train.py 的 piper_sample_generator_path（指向根目录 wrapper）
+piper_sample_generator_path: "."
 
 output_dir: "./hey_eventi_model"
 
 rir_paths:
   - "./mit_rirs/Audio"
 
-# Use musan subdirectories directly (they contain actual audio files)
 background_paths:
   - "./musan/music"
   - "./musan/noise"
@@ -49,3 +48,170 @@ steps: 50000
 
 max_negative_weight: 1500
 target_false_positives_per_hour: 0.5
+
+# ========== TTS 平台配置 ==========
+
+# 自动下载训练数据（RIR、background、validation）
+auto_download_data: true
+
+# TTS 平台选择：aliyun, kokoro, edge
+tts_providers:
+  - aliyun
+  - kokoro
+  - edge
+
+# 阿里云模型列表（通过 python list_voices.py --provider aliyun 查看后配置）
+aliyun_models:
+  - "sambert-eva-v1"
+  - "sambert-beth-v1"
+  - "sambert-cindy-v1"
+  - "sambert-perla-v1"
+  - "sambert-clara-v1"
+  - "sambert-camila-v1"
+  - "sambert-cally-v1"
+  - "sambert-hanna-v1"
+  - "sambert-donna-v1"
+  - "sambert-betty-v1"
+  - "sambert-brian-v1"
+  - "sambert-indah-v1"
+  - "sambert-zhichu-v1"
+  - "sambert-zhide-v1"
+  - "sambert-zhida-v1"
+  - "sambert-zhishu-v1"
+  - "sambert-zhiyue-v1"
+  - "sambert-zhiye-v1"
+  - "sambert-zhiya-v1"
+  - "sambert-zhiying-v1"
+  - "sambert-zhistella-v1"
+  - "sambert-zhihao-v1"
+  - "sambert-zhilun-v1"
+  - "sambert-zhimao-v1"
+  - "sambert-zhigui-v1"
+  - "sambert-zhinan-v1"
+  - "sambert-zhixiao-v1"
+  - "sambert-zhimo-v1"
+  - "sambert-zhiming-v1"
+  - "sambert-zhiru-v1"
+  - "sambert-zhiqi-v1"
+  - "sambert-zhiting-v1"
+  - "sambert-zhiyuan-v1"
+  - "sambert-zhixiang-v1"
+  - "sambert-zhijia-v1"
+  - "sambert-zhifei-v1"
+  - "sambert-zhiwei-v1"
+  - "sambert-zhijing-v1"
+  - "sambert-zhimiao-emo-v1"
+  - "sambert-zhishuo-v1"
+  - "sambert-zhiqian-v1"
+  - "sambert-zhina-v1"
+
+# Edge 音色（通过 python list_voices.py --provider edge 查看后配置）
+edge_voices:
+  - "en-AU-WilliamMultilingualNeural"
+  - "en-AU-NatashaNeural"
+  - "en-CA-ClaraNeural"
+  - "en-CA-LiamNeural"
+  - "en-HK-YanNeural"
+  - "en-HK-SamNeural"
+  - "en-IN-NeerjaExpressiveNeural"
+  - "en-IN-NeerjaNeural"
+  - "en-IN-PrabhatNeural"
+  - "en-IE-ConnorNeural"
+  - "en-IE-EmilyNeural"
+  - "en-KE-AsiliaNeural"
+  - "en-KE-ChilembaNeural"
+  - "en-NZ-MitchellNeural"
+  - "en-NZ-MollyNeural"
+  - "en-NG-AbeoNeural"
+  - "en-NG-EzinneNeural"
+  - "en-PH-JamesNeural"
+  - "en-PH-RosaNeural"
+  - "en-US-AvaNeural"
+  - "en-US-AndrewNeural"
+  - "en-US-EmmaNeural"
+  - "en-US-BrianNeural"
+  - "en-SG-LunaNeural"
+  - "en-SG-WayneNeural"
+  - "en-ZA-LeahNeural"
+  - "en-ZA-LukeNeural"
+  - "en-TZ-ElimuNeural"
+  - "en-TZ-ImaniNeural"
+  - "en-GB-LibbyNeural"
+  - "en-GB-MaisieNeural"
+  - "en-GB-RyanNeural"
+  - "en-GB-SoniaNeural"
+  - "en-GB-ThomasNeural"
+  - "en-US-AnaNeural"
+  - "en-US-AndrewMultilingualNeural"
+  - "en-US-AriaNeural"
+  - "en-US-AvaMultilingualNeural"
+  - "en-US-BrianMultilingualNeural"
+  - "en-US-ChristopherNeural"
+  - "en-US-EmmaMultilingualNeural"
+  - "en-US-EricNeural"
+  - "en-US-GuyNeural"
+  - "en-US-JennyNeural"
+  - "en-US-MichelleNeural"
+  - "en-US-RogerNeural"
+  - "en-US-SteffanNeural"
+  - "zh-HK-HiuGaaiNeural"
+  - "zh-HK-HiuMaanNeural"
+  - "zh-HK-WanLungNeural"
+  - "zh-CN-XiaoxiaoNeural"
+  - "zh-CN-XiaoyiNeural"
+  - "zh-CN-YunjianNeural"
+  - "zh-CN-YunxiNeural"
+  - "zh-CN-YunxiaNeural"
+  - "zh-CN-YunyangNeural"
+  - "zh-CN-liaoning-XiaobeiNeural"
+  - "zh-TW-HsiaoChenNeural"
+  - "zh-TW-YunJheNeural"
+  - "zh-TW-HsiaoYuNeural"
+  - "zh-CN-shaanxi-XiaoniNeural"
+
+# Kokoro 音色（通过 python list_voices.py --provider kokoro 查看后配置）
+kokoro_voices:
+  - "af_alloy"
+  - "af_aoede"
+  - "af_bella"
+  - "af_heart"
+  - "af_jadzia"
+  - "af_jessica"
+  - "af_kore"
+  - "af_nicole"
+  - "af_nova"
+  - "af_river"
+  - "af_sarah"
+  - "af_sky"
+  - "am_adam"
+  - "am_echo"
+  - "am_eric"
+  - "am_fenrir"
+  - "am_liam"
+  - "am_michael"
+  - "am_onyx"
+  - "am_puck"
+  - "am_santa"
+  - "bf_alice"
+  - "bf_emma"
+  - "bf_lily"
+  - "bm_daniel"
+  - "bm_fable"
+  - "bm_george"
+  - "bm_lewis"
+
+# TTS 参数组合
+tts_params:
+  aliyun:
+    speech_rates: [-200, -100, 0, 100, 200]
+    pitch_rates: [-200, 0, 200]
+  kokoro:
+    speeds: [0.75, 0.9, 1.0, 1.1, 1.25]
+  edge:
+    rates: ["-20%", "-10%", "+0%", "+10%", "+20%"]
+    pitches: ["-10Hz", "+0Hz", "+10Hz"]
+
+# 并发控制
+aliyun_concurrency: 5
+kokoro_concurrency: 1
+edge_concurrency: 20

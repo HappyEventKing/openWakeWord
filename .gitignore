@@ -155,3 +155,7 @@ openwakeword_features_ACAV100M_2000_hrs_16bit.npy
 mit_rir.zip
 musan.tar.gz
 .claude/
+
+# Model binaries (auto-downloaded)
+openwakeword/resources/models/*.onnx
+openwakeword/resources/models/*.tflite

@@ -692,6 +692,14 @@ if __name__ == '__main__':
     args = parser.parse_args()
     config = yaml.load(open(args.training_config, 'r').read(), yaml.Loader)
 
+    # Auto-download training data if configured
+    if config.get("auto_download_data", False):
+        try:
+            from custom.downloader import ensure_training_data
+            ensure_training_data(config)
+        except Exception as e:
+            logging.warning(f"auto_download_data enabled but failed: {e}")
+
     # imports Piper for synthetic sample generation
     sys.path.insert(0, os.path.abspath(config["piper_sample_generator_path"]))
     from generate_samples import generate_samples
