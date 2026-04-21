@@ -677,7 +677,8 @@ def augment_clips(
                 clip_data = clip_data[0:total_length]
 
             if clip_sr != sr:
-                raise ValueError("Error! Clip does not have the correct sample rate!")
+                print(f"[SKIP] {clip}: sample rate {clip_sr} != expected {sr}")
+                continue
 
             clip_data = create_fixed_size_clip(clip_data, total_length, clip_sr)
 
@@ -685,12 +686,14 @@ def augment_clips(
             augmented_clips.append(torch.from_numpy(augment1(samples=clip_data, sample_rate=sr)))
 
         # Do second pass augmentations
+        if len(augmented_clips) == 0:
+            continue
         device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
         augmented_batch = augment2(samples=torch.vstack(augmented_clips).unsqueeze(dim=1).to(device), sample_rate=sr).squeeze(axis=1)
 
         # Do reverberation
         if augmentation_probabilities["RIR"] >= np.random.random() and RIR_paths != []:
-            rir_waveform, sr = torchaudio.load(random.choice(RIR_paths))
+            rir_waveform, _ = torchaudio.load(random.choice(RIR_paths))
             augmented_batch = reverberate(augmented_batch.cpu(), rir_waveform, rescale_amp="avg")
 
         # yield batch of 16-bit PCM audio data

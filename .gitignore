@@ -142,3 +142,16 @@ examples/
 
 # archive files
 archive/
+
+temp_audio/
+tools/
+hey_eventi_model/
+mit_rirs/
+musan/
+voice_test/
+venv_2/
+validation_set_features.npy
+openwakeword_features_ACAV100M_2000_hrs_16bit.npy
+mit_rir.zip
+musan.tar.gz
+.claude/

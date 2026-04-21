@@ -1,0 +1,51 @@
+model_name: "hey_eventi"
+
+target_phrase:
+  - "hey eventi"
+
+custom_negative_phrases: []
+
+n_samples: 13480
+n_samples_val: 3370
+
+tts_batch_size: 50
+augmentation_batch_size: 16
+
+# Point to project root where generate_samples.py stub is located
+piper_sample_generator_path: "./piper_stub"
+
+output_dir: "./hey_eventi_model"
+
+rir_paths:
+  - "./mit_rirs/Audio"
+
+# Use musan subdirectories directly (they contain actual audio files)
+background_paths:
+  - "./musan/music"
+  - "./musan/noise"
+  - "./musan/speech"
+
+background_paths_duplication_rate:
+  - 1
+  - 1
+  - 1
+
+false_positive_validation_data_path: "./validation_set_features.npy"
+
+augmentation_rounds: 3
+
+feature_data_files:
+  "ACAV100M_sample": "./openwakeword_features_ACAV100M_2000_hrs_16bit.npy"
+
+batch_n_per_class:
+  "ACAV100M_sample": 1024
+  "adversarial_negative": 50
+  "positive": 50
+
+model_type: "dnn"
+layer_size: 32
+
+steps: 50000
+
+max_negative_weight: 1500
+target_false_positives_per_hour: 0.5
