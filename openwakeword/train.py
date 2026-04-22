@@ -12,6 +12,17 @@ except Exception as e:
     print(f"[torchaudio patch] skipped: {e}")
 
 import torch
+
+# PyTorch 2.6+ changed torch.load default to weights_only=True,
+# which breaks deep-phonemizer==0.0.19 checkpoint loading.
+# Restore legacy default for trusted checkpoints.
+_orig_torch_load = torch.load
+def _torch_load_weights_only_false(*args, **kwargs):
+    if "weights_only" not in kwargs:
+        kwargs["weights_only"] = False
+    return _orig_torch_load(*args, **kwargs)
+torch.load = _torch_load_weights_only_false
+
 from torch import optim, nn
 import torchinfo
 import torchmetrics

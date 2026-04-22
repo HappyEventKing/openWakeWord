@@ -166,6 +166,10 @@ test_voice_samples/
 # Model binaries (auto-downloaded)
 openwakeword/resources/models/*.onnx
 openwakeword/resources/models/*.tflite
+openwakeword/resources/en_us_cmudict_forward.pt
+
+# User-recorded ambient noise
+real_mic_noise/
 
 # Prevent accidental archive commits in root
 /musan.tar.gz
