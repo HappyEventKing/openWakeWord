@@ -49,6 +49,34 @@ python test_wakeup.py \
   --audio ./output/my_wakeword/positive_test/
 ```
 
+## Improving Performance on Low-Quality Microphones
+
+If your model works well with good audio but fails on noisy or low-quality microphones, you can inject the target device's actual noise into the training data:
+
+1. Record 2-5 minutes of ambient noise from the target microphone (no talking, just the environment).
+2. Place the WAV file in `./real_mic_noise/`.
+3. Enable it in your config (already included in `config.template.yml`):
+
+```yaml
+background_paths:
+  - "./downloads/musan/music"
+  - "./downloads/musan/noise"
+  - "./downloads/musan/speech"
+  - "./real_mic_noise"
+
+background_paths_duplication_rate:
+  - 1
+  - 1
+  - 1
+  - 2  # Higher weight = more frequent mixing
+
+augmentation_rounds: 5  # Increase coverage (default was 3)
+```
+
+4. Re-run training with `--augment_clips --overwrite` to rebuild features with the new noise.
+
+This lets `augment_clips` overlay your real microphone's spectral signature onto the TTS-generated samples, making the model more robust on that specific hardware.
+
 ## Directory Layout
 
 ```

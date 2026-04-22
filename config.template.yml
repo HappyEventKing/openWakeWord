@@ -23,15 +23,21 @@ background_paths:
   - "./downloads/musan/music"
   - "./downloads/musan/noise"
   - "./downloads/musan/speech"
+  # 可选：添加目标设备的真实环境噪声，提升在差麦克风上的唤醒率
+  # 录制方法：用目标麦克风录 2-5 分钟纯环境噪声（不要说话），放到该目录下
+  - "./real_mic_noise"
 
 background_paths_duplication_rate:
   - 1
   - 1
   - 1
+  - 2  # real_mic_noise 的权重，越大越频繁叠加到训练样本上
 
 false_positive_validation_data_path: "./downloads/validation_set_features.npy"
 
-augmentation_rounds: 3
+# 数据增强轮次。每个样本会被增强这么多次，叠加随机背景音/混响。
+# 如果加了 real_mic_noise，建议设为 5，让更多样本叠加到真实噪声
+augmentation_rounds: 5
 
 feature_data_files:
   "ACAV100M_sample": "./downloads/openwakeword_features_ACAV100M_2000_hrs_16bit.npy"
